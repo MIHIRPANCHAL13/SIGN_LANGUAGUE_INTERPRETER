@@ -2,21 +2,23 @@ import tkinter as tk
 from tkinter import ttk
 from tkVideoPlayer import TkinterVideo
 from pathlib import Path
-
 import keywords
 from translate import Translator
 import speech_recognition as sr
 import threading
+import pandas as pd
+import google.generativeai as genai
+from IPython.display import Markdown
 
 class VideoPlayerApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Video Player App")
+        self.root.title("Sign Language Interpreter")
         self.root.geometry("800x600")  # Set the initial window size
 
         # Placeholder image
         self.placeholder_image = tk.PhotoImage(
-            file="C:\\Users\\ruchi\\Code\\SignLanguageInterpreter\\SIGN_LANGUAGUE_INTERPRETER\\capa-blogpost-cultura-surda.png"
+            file="F:\Automatic-Indian-Sign-Language-Translator-ISL-master\SIGN LANGUAGE INTERPRETER\capa-blogpost-cultura-surda.png"
         )  # Replace with your placeholder image path
         self.image_label = tk.Label(root, image=self.placeholder_image)
         self.image_label.pack(pady=10)
@@ -27,7 +29,7 @@ class VideoPlayerApp:
 
         # Text box
         self.entry_var = tk.StringVar()
-        self.text_entry = ttk.Entry(root, textvariable=self.entry_var)
+        self.text_entry = ttk.Entry(root, textvariable=self.entry_var,width=50)
         self.text_entry.pack(pady=10)
 
         # Text widget to display the entered text
@@ -58,8 +60,16 @@ class VideoPlayerApp:
     def play_video(self):
         # Get the video filename based on the entered text
         text = self.entry_var.get()
+        GOOGLE_API_KEY = "AIzaSyCTOwhmkEKKDjLvDO6uogNuaBfOUWdiANI"
+        genai.configure(api_key=GOOGLE_API_KEY)
+        input_text = f"""Give an abridged version of the given text'''{text} ''' """
+        model = genai.GenerativeModel('gemini-pro')
+        response = model.generate_content(input_text)
+        text = response.text.lower()
+        text=keywords.remove_punctuation(text)
         input_words = text.split(' ')
         video_list = keywords.find_keywords(text)
+
 
         self.video_queue.clear()
 
@@ -84,7 +94,7 @@ class VideoPlayerApp:
         # For example, you might query a database to get the filename
         # Here, we'll assume the videos are stored in the "videos" folder with the same name as the entered text
         video_folder = Path(
-            "C:\\Users\\ruchi\\Code\\SignLanguageInterpreter\\SIGN_LANGUAGUE_INTERPRETER\\trimmed_new")
+            "F:\Automatic-Indian-Sign-Language-Translator-ISL-master\SIGN LANGUAGE INTERPRETER\mp4_dataset")
         video_filename = video_folder / (text + ".mp4")
         if video_filename.is_file():
             return str(video_filename)
